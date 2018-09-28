@@ -1,0 +1,161 @@
+﻿@model CRM.Core.ViewModel.Claim.ClaimDetailsViewModel
+@{
+    ViewBag.Title = "Claim";
+    if (TempData["ClaimTabState"] == null)
+    {
+        TempData["ClaimTabState"] = new CRM.Core.ViewModel.Claim.ClaimTabState();
+    }
+    var tabState = (CRM.Core.ViewModel.Claim.ClaimTabState)TempData["ClaimTabState"];
+    TempData.Keep("ClaimTabState");
+    tabState.ClaimDetails = true;
+    var claimType = (CRM.Core.ViewModel.Claim.ClaimsType)TempData.Peek("TempClaimType");
+}
+<div class="cr-content">
+    <div class="arrow-container arrow-md">
+        <ul class="arrow-menu" style=" padding-left:0px;">
+            <li>
+                @if (tabState.ClientDetails)
+                {
+                    @Html.ActionLink("Client Details", "ClientDetail", null, new { @class = "active1" })
+                }
+                else
+                {
+                    <a href="javascript:void(0)" class="active1">Client Details</a>
+                }
+            </li>
+            <li>
+                @if (tabState.PolicyDetails)
+                {
+                    @Html.ActionLink("Policy Details", "PolicyDetail", null, new { @class = "active1" })
+                }
+                else
+                {
+                    <a href="javascript:void(0)">Policy Details</a>
+                }
+            </li>
+            <li>
+                @if (tabState.InsuredDetails)
+                {
+                    @Html.ActionLink("Insured Details", "InsuredDetails", null, new { @class = "active1" })
+                }
+                else
+                {
+                    <a href="javascript:void(0)">Insured Details</a>
+                }
+            </li>
+            <li>
+                @if (tabState.ClaimDetails)
+                {
+                    @Html.ActionLink("Claim Details", "ClaimDetails", null, new { @class = "active1" })
+                }
+                else
+                {
+                    <a href="javascript:void(0)">Claim Details</a>
+                }
+            </li>
+            @*<li>
+                    @if (tabState.Reserve)
+                    {
+                        @Html.ActionLink("Reserve", "ReserveDetails", null, new { @class = "active1" })
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)">Reserve</a>
+                    }
+                </li>*@
+
+        </ul>
+    </div>
+    <div>
+        @using (/*Html.BeginForm("ClaimDetails", "Claim", FormMethod.Post, new { @class = "form-sm" })*/Ajax.BeginForm("ClaimDetails", "Claim", new AjaxOptions { HttpMethod = "POST", OnSuccess = "myApp.NewClaim.OnSuccessSaveClaimDetails" }, new { @class = "form-sm" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true)
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.CategoryId, new { @class = "control-label" })
+                        @Html.EditorFor(model => model.CategoryId, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.CategoryId, null, new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.LossDate, new { @class = "control-label" })
+                        @Html.EditorFor(model => model.LossDate)
+                        @Html.ValidationMessageFor(model => model.LossDate, null, new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.DateReceived, new { @class = "control-label" })
+                        @Html.EditorFor(model => model.DateReceived)
+                        @Html.ValidationMessageFor(model => model.DateReceived, null, new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.TimeReceived, new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.TimeReceived, ViewBag.Time as SelectList, "--select--", new { @class = "selectpicker form-control", @style = "width: 86px; float: left; margin-right: 8px; display: block;" })
+                        @Html.DropDownListFor(model => model.TimeReceivedPeriod, ViewBag.AMPM as SelectList, null, new { @class = "selectpicker form-control", @style = "width: 86px; display: block;" })
+                        @Html.ValidationMessageFor(model => model.TimeReceived, null, new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.ReceivedFrom, new { @class = "control-label" })
+                        @Html.EditorFor(model => model.ReceivedFrom, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.ReceivedFrom)
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.TypeofLoss, new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.TypeofLoss, null, "--select--", new { @class = "selectpicker form-control" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.LossDescription, new { @class = "control-label" })
+                        @Html.TextAreaFor(model => model.LossDescription, new { @class = "form-control", @style = "resize: none;", @cols = 50, @rows = 3 })
+                    </div>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+            <div class="cr-content">
+                @Html.ActionLink("Cancel", "CreateNew", null, new { @class = "btn cancel btn-left", onclick = "return myApp.Common.Confirm(this,'Do you wish to delete this claim and end the process ?');" })
+                <input type="submit" value="Save" name="btnNext" class="btn save btn-right" onclick=" return myApp.NewClaim.AssignAdjuster(this, 'Do you wish to assign an adjuster?');" />
+                <input type="submit" value="Back" name="btnBack" class="btn back cancel  btn-right" />
+                @Html.Hidden("assignAdjuster", false)
+            </div>
+        }
+    </div>
+
+
+    @*This trhee Popups are used in order to assign an adjuster after creating a new claim*@
+    @* Model Popup Global *@
+    <div class="modal fade" id="PopupClaimEdit" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+
+                <div id="PartialPopupClaimEdit">
+                </div>
+            </div>
+        </div>
+    </div>
+    @* Model Popup Global Level 2 *@
+    <div class="modal fade" id="PopupClaimEdit2" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+
+                <div id="PartialPopupClaimEdit2">
+                </div>
+            </div>
+        </div>
+    </div>
+    @* Model Popup Global Level 3 *@
+    <div class="modal fade" id="PopupClaimEdit3" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+
+                <div id="PartialPopupClaimEdit3">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery.als-1.7.min.js"></script>
+    @Scripts.Render("~/bundles/Claim")
+    @Scripts.Render("~/bundles/ClaimEditjs")
+}

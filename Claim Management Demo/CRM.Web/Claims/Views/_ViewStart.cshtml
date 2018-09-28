@@ -1,0 +1,10 @@
+﻿@using CRM.Common.Security
+@using PagedList.Mvc
+@{
+    string defaultLayout = null;
+    if (AuthUser.User != null)
+    {
+        defaultLayout = AuthUser.User.UserName.ToLower() == "admin" ? "~/Views/Shared/_LayoutAdmin.cshtml" : "~/Views/Shared/_Layout.cshtml"; ;
+    }
+    Layout = defaultLayout;
+}
